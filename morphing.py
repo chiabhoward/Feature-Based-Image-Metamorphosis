@@ -68,8 +68,8 @@ if __name__ == '__main__':
     height, width = image_1.shape[0], image_1.shape[1]
     image_2 = cv2.resize(image_2, (height, width))
 
-    line_list_1 = [line(20, 133, 115, 97), line(125, 90, 221, 50), line(230, 59, 295, 97), line(300, 110, 308, 205), line(300, 218, 234, 267), line(229, 276, 112, 343), line(105, 332, 136, 236), line(130, 229, 106, 116), line(95, 159, 28, 141)] # destination image's line
-    line_list_2 = [line(5, 129, 113, 52), line(131, 52, 243, 30), line(258, 34, 329, 91), line(330, 104, 318, 249), line(309, 260, 163, 280), line(149, 289, 79, 394), line(68, 387, 103, 222), line(104, 209, 102, 140), line(98, 129, 10, 140)] # source image's line
+    line_list_1 = [line(20, 133, 115, 97), line(125, 90, 221, 50), line(230, 59, 295, 97), line(300, 110, 308, 205), line(300, 218, 234, 267), line(229, 276, 112, 343), line(105, 332, 136, 236), line(130, 229, 106, 116), line(95, 159, 28, 141)]
+    line_list_2 = [line(5, 129, 113, 52), line(131, 52, 243, 30), line(258, 34, 329, 91), line(330, 104, 318, 249), line(309, 260, 163, 280), line(149, 289, 79, 394), line(68, 387, 103, 222), line(104, 209, 102, 140), line(98, 129, 10, 140)]
  
     output_img_list = [image_1]
 
