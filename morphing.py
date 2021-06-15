@@ -51,7 +51,7 @@ def get_final_point(x, y, DSUM_x, DSUM_y, weightsum, height, width):
     return min(max(x + DSUM_x / weightsum, 0), height-1), min(max(y + DSUM_y / weightsum, 0), width-1)
 
 def bilinear(image, x, y):
-    up, left = math.floor(x), math.floor(y)
+    up, left = min(math.floor(x), image.shape[0]-1), min(math.floor(y), image.shape[1]-1)
     down, right = min(up+1, image.shape[0]-1), min(left+1, image.shape[1]-1)
     a, b = x-up, y-left
     return (1-a)*(1-b)*image[up][left] + (1-a)*b*image[up][right] + a*(1-b)*image[down][left] + a*b*image[down][right]
