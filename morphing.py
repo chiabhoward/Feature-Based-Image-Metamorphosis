@@ -67,9 +67,9 @@ def output_result(list, height, width):
 
 if __name__ == '__main__':
     args = get_args()
-    image_1, image_2, image_3 = cv2.imread(args.img1), cv2.imread(args.img2), cv2.imread(args.img3)
-    height, width = image_1.shape[0], image_1.shape[1]
-    image_2, image_3 = cv2.resize(image_2, (height, width)), cv2.resize(image_3, (height, width))
+    image_0, image_1, image_2, image_3 = cv2.imread("image0.png"), cv2.imread("image1.png"), cv2.imread("image2.png"), cv2.imread("image3.png")
+    height, width = image_0.shape[0], image_0.shape[1]
+    image_1, image_2 = cv2.resize(image_1, (height, width)), cv2.resize(image_2, (height, width))
     
     line_list = []
     for i in range(4):
@@ -80,7 +80,7 @@ if __name__ == '__main__':
                 tmp.append(line(l["y1"], l["x1"], l["y2"], l["x2"]))
             line_list.append(tmp)
 
-    output_img_list = [image_1]
+    output_img_list = [image_0]
 
     for i in range(1, args.warp+2):
         print('Warping...[{}/{}]'.format(i, args.warp+1))
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                 final_x_2, final_y_2 = get_final_point(x, y, DSUM_x_2, DSUM_y_2, weightsum, height, width)
                 final_x_3, final_y_3 = get_final_point(x, y, DSUM_x_3, DSUM_y_3, weightsum, height, width)
                 
-                warp[x][y] = (1-interpolation) * bilinear(image_1, final_x_1, final_y_1) + interpolation * (args.w2 * bilinear(image_2, final_x_2, final_y_2) + args.w3 * bilinear(image_3, final_x_3, final_y_3))
+                warp[x][y] = (1-interpolation) * bilinear(image_0, final_x_1, final_y_1) + interpolation * (args.w2 * bilinear(image_1, final_x_2, final_y_2) + args.w3 * bilinear(image_2, final_x_3, final_y_3))
 
         output_img_list.append(warp)
     
