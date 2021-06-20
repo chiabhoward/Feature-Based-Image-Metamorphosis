@@ -44,16 +44,20 @@ class line:
     def cal_weight(self, x, y, a, b, p):
         return math.pow((math.pow(self.len, p) / (a + self.cal_dist(x, y))), b)
 
-def get_lines():
-    ret = []
+def get_jsons():
+    lines, rects = [], []
     for i in range(4):
         with open("lines" + str(i) + ".json") as f:
             data = json.load(f)
             tmp = []
             for l in data:
                 tmp.append(line(l["x1"], l["y1"], l["x2"], l["y2"]))
-            ret.append(tmp)
-    return ret
+            lines.append(tmp)
+    with open("rects.json") as f:
+        data = json.load(f)
+        for l in data:
+            rects.append(line(l["x1"], l["y1"], l["x2"], l["y2"]))
+    return lines, rects
 
 def interpolate_lines(line_list_1, line_list_2, n, i, height, width, mode):
     if mode == 0:   # interpolate lines by endpoints
@@ -102,7 +106,7 @@ if __name__ == '__main__':
     height, width = image_0.shape[0], image_0.shape[1]
     image_1, image_2 = cv2.resize(image_1, (height, width)), cv2.resize(image_2, (height, width))
     
-    line_list = get_lines()
+    line_list, rect_list = get_jsons()
 
     output_img_list = [image_0]
 
@@ -113,27 +117,31 @@ if __name__ == '__main__':
         line_list_03 = interpolate_lines(line_list[0], line_list[3], args.warp, i, height, width, args.mode)
         line_list_12 = interpolate_lines(line_list_01, line_list_02, args.w1*10+args.w2*10-1, args.w2*10, height, width, args.mode) if args.w1**2+args.w2**2 > 0 else line_list_01
         line_list_123 = interpolate_lines(line_list_12, line_list_03, args.w1*10+args.w2*10+args.w3*10-1, args.w3*10, height, width, args.mode)
-        warp = np.zeros((height, width, 3))
+        warp = image_0.copy()
         interpolation = i/(args.warp+1)
 
-        for x in range(height):
-            for y in range(width):                
-                DSUM_x_0, DSUM_y_0, DSUM_x_1, DSUM_y_1, DSUM_x_2, DSUM_y_2, DSUM_x_3, DSUM_y_3, weightsum = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        for r in rect_list:
+            for x in range(height):
+                for y in range(width):
+                    DSUM_x_0, DSUM_y_0, DSUM_x_1, DSUM_y_1, DSUM_x_2, DSUM_y_2, DSUM_x_3, DSUM_y_3, weightsum = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
-                for line_0, line_1, line_2, line_3, line_warp in zip(line_list[0], line_list[1], line_list[2], line_list[3], line_list_123):
-                    weight = line_warp.cal_weight(x, y, args.a, args.b, args.p)
-                    weightsum += weight
-                    DSUM_x_0, DSUM_y_0 = update_DSUM(x, y, line_0, line_warp, weight, DSUM_x_0, DSUM_y_0)
-                    DSUM_x_1, DSUM_y_1 = update_DSUM(x, y, line_1, line_warp, weight, DSUM_x_1, DSUM_y_1)
-                    DSUM_x_2, DSUM_y_2 = update_DSUM(x, y, line_2, line_warp, weight, DSUM_x_2, DSUM_y_2)
-                    DSUM_x_3, DSUM_y_3 = update_DSUM(x, y, line_3, line_warp, weight, DSUM_x_3, DSUM_y_3)
+                    for line_0, line_1, line_2, line_3, line_warp in zip(line_list[0], line_list[1], line_list[2], line_list[3], line_list_123):
+                        weight = line_warp.cal_weight(x, y, args.a, args.b, args.p)
+                        weightsum += weight
+                        DSUM_x_0, DSUM_y_0 = update_DSUM(x, y, line_0, line_warp, weight, DSUM_x_0, DSUM_y_0)
+                        DSUM_x_1, DSUM_y_1 = update_DSUM(x, y, line_1, line_warp, weight, DSUM_x_1, DSUM_y_1)
+                        DSUM_x_2, DSUM_y_2 = update_DSUM(x, y, line_2, line_warp, weight, DSUM_x_2, DSUM_y_2)
+                        DSUM_x_3, DSUM_y_3 = update_DSUM(x, y, line_3, line_warp, weight, DSUM_x_3, DSUM_y_3)
 
-                final_x_0, final_y_0 = get_final_point(x, y, DSUM_x_0, DSUM_y_0, weightsum, height, width)
-                final_x_1, final_y_1 = get_final_point(x, y, DSUM_x_1, DSUM_y_1, weightsum, height, width)
-                final_x_2, final_y_2 = get_final_point(x, y, DSUM_x_2, DSUM_y_2, weightsum, height, width)
-                final_x_3, final_y_3 = get_final_point(x, y, DSUM_x_3, DSUM_y_3, weightsum, height, width)
-                
-                warp[x][y] = (1-interpolation) * bilinear(image_0, final_x_0, final_y_0) + interpolation * (args.w1 * bilinear(image_1, final_x_1, final_y_1) + args.w2 * bilinear(image_2, final_x_2, final_y_2) + args.w3 * bilinear(image_3, final_x_3, final_y_3))
+                    final_x_0, final_y_0 = get_final_point(x, y, DSUM_x_0, DSUM_y_0, weightsum, height, width)
+                    final_x_1, final_y_1 = get_final_point(x, y, DSUM_x_1, DSUM_y_1, weightsum, height, width)
+                    final_x_2, final_y_2 = get_final_point(x, y, DSUM_x_2, DSUM_y_2, weightsum, height, width)
+                    final_x_3, final_y_3 = get_final_point(x, y, DSUM_x_3, DSUM_y_3, weightsum, height, width)
+                    
+                    if x < r.P.x or x >= r.Q.x or y < r.P.y or y >= r.Q.y:
+                        warp[x][y] = bilinear(image_0, final_x_0, final_y_0)
+                    else:
+                        warp[x][y] = (1-interpolation) * bilinear(image_0, final_x_0, final_y_0) + interpolation * (args.w1 * bilinear(image_1, final_x_1, final_y_1) + args.w2 * bilinear(image_2, final_x_2, final_y_2) + args.w3 * bilinear(image_3, final_x_3, final_y_3))
 
         output_img_list.append(warp)
     
