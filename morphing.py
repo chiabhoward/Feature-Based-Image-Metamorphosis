@@ -92,7 +92,7 @@ def output_result(list, height, width, path="result"):
         shutil.rmtree(path)    
     os.mkdir(path)
         
-    videoWriter = cv2.VideoWriter(os.path.join(path, 'warp_video.mp4'), 0x7634706d, 4, (width, height))
+    videoWriter = cv2.VideoWriter(os.path.join(path, 'warp_video.mp4'), 0x7634706d, 10, (width, height))
     for i, img in enumerate(list):
         cv2.imwrite(os.path.join(path, "warp_" + str(i) + ".jpg"), img)
     for i in range(len(list)):
@@ -120,28 +120,28 @@ if __name__ == '__main__':
         warp = image_0.copy()
         interpolation = i/(args.warp+1)
 
-        for r in rect_list:
-            for x in range(height):
-                for y in range(width):
-                    DSUM_x_0, DSUM_y_0, DSUM_x_1, DSUM_y_1, DSUM_x_2, DSUM_y_2, DSUM_x_3, DSUM_y_3, weightsum = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        for x in range(height):
+            for y in range(width):
+                DSUM_x_0, DSUM_y_0, DSUM_x_1, DSUM_y_1, DSUM_x_2, DSUM_y_2, DSUM_x_3, DSUM_y_3, weightsum = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
-                    for line_0, line_1, line_2, line_3, line_warp in zip(line_list[0], line_list[1], line_list[2], line_list[3], line_list_123):
-                        weight = line_warp.cal_weight(x, y, args.a, args.b, args.p)
-                        weightsum += weight
-                        DSUM_x_0, DSUM_y_0 = update_DSUM(x, y, line_0, line_warp, weight, DSUM_x_0, DSUM_y_0)
-                        DSUM_x_1, DSUM_y_1 = update_DSUM(x, y, line_1, line_warp, weight, DSUM_x_1, DSUM_y_1)
-                        DSUM_x_2, DSUM_y_2 = update_DSUM(x, y, line_2, line_warp, weight, DSUM_x_2, DSUM_y_2)
-                        DSUM_x_3, DSUM_y_3 = update_DSUM(x, y, line_3, line_warp, weight, DSUM_x_3, DSUM_y_3)
+                for line_0, line_1, line_2, line_3, line_warp in zip(line_list[0], line_list[1], line_list[2], line_list[3], line_list_123):
+                    weight = line_warp.cal_weight(x, y, args.a, args.b, args.p)
+                    weightsum += weight
+                    DSUM_x_0, DSUM_y_0 = update_DSUM(x, y, line_0, line_warp, weight, DSUM_x_0, DSUM_y_0)
+                    DSUM_x_1, DSUM_y_1 = update_DSUM(x, y, line_1, line_warp, weight, DSUM_x_1, DSUM_y_1)
+                    DSUM_x_2, DSUM_y_2 = update_DSUM(x, y, line_2, line_warp, weight, DSUM_x_2, DSUM_y_2)
+                    DSUM_x_3, DSUM_y_3 = update_DSUM(x, y, line_3, line_warp, weight, DSUM_x_3, DSUM_y_3)
 
-                    final_x_0, final_y_0 = get_final_point(x, y, DSUM_x_0, DSUM_y_0, weightsum, height, width)
-                    final_x_1, final_y_1 = get_final_point(x, y, DSUM_x_1, DSUM_y_1, weightsum, height, width)
-                    final_x_2, final_y_2 = get_final_point(x, y, DSUM_x_2, DSUM_y_2, weightsum, height, width)
-                    final_x_3, final_y_3 = get_final_point(x, y, DSUM_x_3, DSUM_y_3, weightsum, height, width)
-                    
-                    if x < r.P.x or x >= r.Q.x or y < r.P.y or y >= r.Q.y:
-                        warp[x][y] = bilinear(image_0, final_x_0, final_y_0)
-                    else:
+                final_x_0, final_y_0 = get_final_point(x, y, DSUM_x_0, DSUM_y_0, weightsum, height, width)
+                final_x_1, final_y_1 = get_final_point(x, y, DSUM_x_1, DSUM_y_1, weightsum, height, width)
+                final_x_2, final_y_2 = get_final_point(x, y, DSUM_x_2, DSUM_y_2, weightsum, height, width)
+                final_x_3, final_y_3 = get_final_point(x, y, DSUM_x_3, DSUM_y_3, weightsum, height, width)
+
+                warp[x][y] = bilinear(image_0, final_x_0, final_y_0)
+                for r in rect_list:    
+                    if x >= r.P.x and x <= r.Q.x and y >= r.P.y and y < r.Q.y:
                         warp[x][y] = (1-interpolation) * bilinear(image_0, final_x_0, final_y_0) + interpolation * (args.w1 * bilinear(image_1, final_x_1, final_y_1) + args.w2 * bilinear(image_2, final_x_2, final_y_2) + args.w3 * bilinear(image_3, final_x_3, final_y_3))
+                        break
 
         output_img_list.append(warp)
     
